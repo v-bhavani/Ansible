@@ -1,0 +1,43 @@
+---
+- name: playbook for simple 2GB filesystem Creation
+  hosts: all
+  become: true
+  tasks:
+    - include_vars:
+        file: variable.yaml
+
+    - name: Install lvm2 dependency
+      package:
+        name: lvm2
+        state: present
+
+    - name: task for creating volume group
+      lvg:
+          vg: "{{value1}}"
+          pvs: "{{pv}}"
+          pesize: 16
+
+    - name: task for creating logical volume
+      lvol:
+          vg: "{{value1}}"
+          lv:  mount_lv
+          size: "{{size}}"
+          force: yes
+
+    - name: Create directory mountpoint if does not exist
+      file:
+        path: "{{dir}}"
+        state: directory
+        mode: '0777'
+
+    - name: format the xfs filesystem
+      filesystem:
+        fstype: "{{ftype}}"
+        dev: /dev/mount_vg/mount_lv
+
+    - name: mount the lv on /mountpoint
+      mount:
+        path: "{{dir}}"
+        src: /dev/mount_vg/mount_lv
+        fstype: "{{ftype}}"
+        state: mounted

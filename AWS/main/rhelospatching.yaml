@@ -1,0 +1,87 @@
+---
+- hosts: all
+
+  gather_facts: yes
+  vars:
+
+  tasks:
+    - include_vars:
+        file: rhelpatch_var.yaml
+    # Pre check before linux patching
+    - name: Printing information about server
+      ansible.builtin.debug:
+        var: "{{item}}"
+      with_items:
+        # - ansible_facts
+        - ansible_facts["hostname"]
+        - ansible_facts["lsb"]
+        - ansible_facts["mounts"]
+        - ansible_facts["kernel"]
+        - ansible_facts["kernel_version"]
+        - ansible_facts["default_ipv4"]
+        - ansible_facts["uptime_seconds"]
+
+    - name: Issuing manual commands (lsblk, vgs, pvs) commands that are not available through gather_facts
+      shell:
+        cmd: |
+          lsblk;
+          echo;
+          vgs;
+          echo;
+          pvs;
+
+      register: manual_checks
+      become: true
+
+    - name: Printing manual checks output
+      ansible.builtin.debug:
+        var: manual_checks["stdout_lines"]
+
+    # Missing step for how to check all applications and DBs are out
+
+    # Patching
+    # Yum does not support clean cache in idempotent way so have to issue command for that
+    - name: Clean all the yum repository
+      shell:
+        cmd: "{{cacheclean_cmd}}"
+      become: true
+
+    - name: List the available packages - Collect
+      ansible.builtin.package_facts:
+        manager: auto
+      become: true
+
+    - name:  List the available packages -  Print the packages facts
+      ansible.builtin.debug:
+        var: ansible_facts["packages"]
+
+    - name: Update Cache
+      ansible.builtin.yum:
+        list: updates
+      become: true
+
+    - name: Upgrade Safe(security)
+      shell:
+        cmd: "{{upgrade_cmd}}"
+      # ansible.builtin.yum:
+      #   # security: yes
+      #   state: latest
+      become: true
+
+    - name: Reboot the linux
+      ansible.builtin.reboot:
+        test_command: uptime
+      become: true
+
+    - name: Check facts after reboot
+      ansible.builtin.gather_facts:
+
+    - name: Printing information about server
+      ansible.builtin.debug:
+        var: "{{item}}"
+      with_items:
+        # - ansible_facts
+        - ansible_facts["hostname"]
+        - ansible_facts["kernel"]
+        - ansible_facts["kernel_version"]
+        - ansible_facts["uptime_seconds"]

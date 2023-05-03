@@ -1,0 +1,18 @@
+---
+  - name: Filesystem extend
+    hosts: all
+    become: true
+    tasks:
+    - include_vars:
+        file: variable.yaml
+    - name: pv add for volume group
+      lvg:
+        vg: "{{vg_name}}"
+        pvs: "{{exist_pvs}},{{new_pvs}}"
+    - name: Extend the logical volume
+      lvol:
+        vg: "{{vg_name}}"
+        lv: "{{lv_name}}"
+        size: "{{extend_size}}"
+        resizefs: true
+        force: yes

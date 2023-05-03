@@ -1,0 +1,11 @@
+---
+- name: sample creating file
+  hosts: all
+  become: true
+  tasks:
+    - include_vars:
+        file: variable.yaml
+    - name: Creating an empty file
+      file:
+        path: "{{path}}"
+        state: "{{type}}"

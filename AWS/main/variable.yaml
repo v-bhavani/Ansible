@@ -1,0 +1,9 @@
+---
+
+
+value1: "mount_vg"
+pv: "/dev/xvdg"
+dir: "/mountpoint"
+dev: "/dev/sdg1"
+ftype: "xfs"
+size: "2g"
