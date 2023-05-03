@@ -1,6 +1,0 @@
-vg_name: "vg_test"
-lv_name: "lv_test"
-lun: "1"
-dir: "/soundhar"
-ftype: "xfs"
-size: "100%FREE"
