@@ -1,0 +1,4 @@
+vgname: "sample"
+lvname: "lvswap"
+lun: "0"
+extend_size: "1g"
