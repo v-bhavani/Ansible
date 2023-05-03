@@ -1,0 +1,5 @@
+---
+vg_name: "mount_vg"
+lv_name: "mount_lv"
+extend_size: "5g"
+pvs: "/dev/sdc"
