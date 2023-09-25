@@ -3,7 +3,7 @@
   become: yes
   tasks:
     - include_vars:
-        file: filesystemstrippingvar.yaml
+        file: fscreationvariable-oracle.yml
 
     - name: Display contents
       shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun1}} | awk '{print $11}' | cut -d '/' -f 4-"
