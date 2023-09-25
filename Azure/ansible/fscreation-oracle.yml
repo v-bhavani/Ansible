@@ -1,0 +1,111 @@
+- name: playbook for filesystem Creation
+  hosts: all
+  become: yes
+  tasks:
+    - include_vars:
+        file: filesystemstrippingvar.yaml
+
+    - name: Display contents
+      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun1}} | awk '{print $11}' | cut -d '/' -f 4-"
+      register: command_output1
+    - name: Display contents
+      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun2}} | awk '{print $11}' | cut -d '/' -f 4-"
+      register: command_output2
+    - name: Display contents
+      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun3}} | awk '{print $11}' | cut -d '/' -f 4-"
+      register: command_output3
+    - name: Display contents
+      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun4}} | awk '{print $11}' | cut -d '/' -f 4-"
+      register: command_output4
+
+    - name: Install lvm2 dependency
+      package:
+        name: lvm2
+        state: present    
+
+    - name: Create Physical Volumes
+      shell: |
+        pvcreate /dev/"{{command_output1.stdout}}" /dev/"{{command_output2.stdout}}" /dev/"{{command_output3.stdout}}" /dev/"{{command_output4.stdout}}" 
+
+    - name: Create Volume Group
+      shell: |
+        vgcreate "{{vg_name}}" /dev/"{{command_output1.stdout}}" /dev/"{{command_output2.stdout}}" /dev/"{{command_output3.stdout}}" /dev/"{{command_output4.stdout}}"
+
+    - name: Create Striped Logical Volume
+      shell: |
+        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name1}} {{vg_name}}
+        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name2}} {{vg_name}}
+        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name3}} {{vg_name}}
+        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name4}} {{vg_name}}
+
+    - name: Create directory mountpoint if does not exist
+      file:
+        path: "{{dir1}}"
+        state: directory
+        mode: '0777'
+
+    - name: format the xfs filesystem
+      filesystem:
+        fstype: "{{ftype}}"
+        dev: /dev/{{vg_name}}/{{lv_name1}}
+
+    - name: mount the lv on mountpoint
+      mount:
+        src: /dev/{{vg_name}}/{{lv_name1}}
+        fstype: "{{ftype}}"
+        state: mounted
+        path: "{{ dir1 }}"
+
+    - name: Create directory mountpoint if does not exist
+      file:
+        path: "{{dir2}}"
+        state: directory
+        mode: '0777'
+
+    - name: format the xfs filesystem
+      filesystem:
+        fstype: "{{ftype}}"
+        dev: /dev/{{vg_name}}/{{lv_name2}}
+
+    - name: mount the lv on mountpoint
+      mount:
+        src: /dev/{{vg_name}}/{{lv_name2}}
+        fstype: "{{ftype}}"
+        state: mounted
+        path: "{{ dir2 }}"
+
+    - name: Create directory mountpoint if does not exist
+      file:
+        path: "{{dir3}}"
+        state: directory
+        mode: '0777'
+
+    - name: format the xfs filesystem
+      filesystem:
+        fstype: "{{ftype}}"
+        dev: /dev/{{vg_name}}/{{lv_name3}}
+
+    - name: mount the lv on mountpoint
+      mount:
+        src: /dev/{{vg_name}}/{{lv_name3}}
+        fstype: "{{ftype}}"
+        state: mounted
+        path: "{{ dir3 }}"
+
+    - name: Create directory mountpoint if does not exist
+      file:
+        path: "{{dir4}}"
+        state: directory
+        mode: '0777'
+
+    - name: format the xfs filesystem
+      filesystem:
+        fstype: "{{ftype}}"
+        dev: /dev/{{vg_name}}/{{lv_name4}}
+
+    - name: mount the lv on mountpoint
+      mount:
+        src: /dev/{{vg_name}}/{{lv_name4}}
+        fstype: "{{ftype}}"
+        state: mounted
+        path: "{{ dir4 }}"
