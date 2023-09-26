@@ -1,3 +1,3 @@
 mount_point: "/ansibletest"
 target_device: "/dev/sdc" 
-desired_size: "10G"  
+desired_size: "20G"  
