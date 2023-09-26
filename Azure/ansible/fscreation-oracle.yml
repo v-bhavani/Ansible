@@ -6,16 +6,16 @@
         file: fscreationvariable-oracle.yml
 
     - name: Display contents
-      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun1}} | awk '{print $11}' | cut -d '/' -f 4-"
+      shell: "ls -ll /dev/disk/azure/scsi1/lun1 | awk '{print $11}' | cut -d '/' -f 4-"
       register: command_output1
     - name: Display contents
-      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun2}} | awk '{print $11}' | cut -d '/' -f 4-"
+      shell: "ls -ll /dev/disk/azure/scsi1/lun2 | awk '{print $11}' | cut -d '/' -f 4-"
       register: command_output2
     - name: Display contents
-      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun3}} | awk '{print $11}' | cut -d '/' -f 4-"
+      shell: "ls -ll /dev/disk/azure/scsi1/lun3 | awk '{print $11}' | cut -d '/' -f 4-"
       register: command_output3
     - name: Display contents
-      shell: "ls -ll /dev/disk/azure/scsi1/lun{{lun4}} | awk '{print $11}' | cut -d '/' -f 4-"
+      shell: "ls -ll /dev/disk/azure/scsi1/lun4 | awk '{print $11}' | cut -d '/' -f 4-"
       register: command_output4
 
     - name: Install lvm2 dependency
