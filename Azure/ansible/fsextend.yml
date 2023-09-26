@@ -5,7 +5,7 @@
 
   tasks:
     - include_vars:
-        file: fsextendvar.yaml
+        file: fsextendvar.yml
 
     - name: Extend the Logical Volume
       command: lvextend -L +{{ desired_size_gb }}G /dev/{{ lv_name }}
