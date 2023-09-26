@@ -33,10 +33,10 @@
 
     - name: Create Striped Logical Volume
       shell: |
-        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name1}} {{vg_name}}
-        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name2}} {{vg_name}}
-        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name3}} {{vg_name}}
-        lvcreate -i{{volumecount}}  -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name4}} {{vg_name}}
+        lvcreate -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name1}} {{vg_name}}
+        lvcreate -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name2}} {{vg_name}}
+        lvcreate -I {{stsize}} -L {{lvsize2}} -n ora{{lv_name3}} {{vg_name}}
+        lvcreate -I {{stsize}} -L {{lvsize1}} -n ora{{lv_name4}} {{vg_name}}
 
     - name: Create directory mountpoint if does not exist
       file:
