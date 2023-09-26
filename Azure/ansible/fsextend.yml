@@ -1,31 +1,15 @@
 ---
 - name: Extend Filesystem
   hosts: all
+  become: yes
+
   tasks:
-    - name: Get LV device
-      command: mount | grep "{{ mount_point }}" | awk '{print $1}'
-      register: lv_device_result
-      changed_when: false
-      become: yes
+    - include_vars:
+        file: fsextendvar.yaml
 
-    - name: Resize Logical Volume
-      command: lvextend -L +{{ desired_size }}G {{ lv_device_result.stdout }}
-      when: lv_device_result.stdout != '' and lv_device_result.stdout == lv_path
-      async: 3600
-      poll: 0
-      become: yes
-
-    - name: Wait for LV resize to complete
-      async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: job_result
-      until: job_result.finished
-      retries: 3600
-      delay: 1
-      when: lv_device_result.stdout != '' and lv_device_result.stdout == lv_path
-      become: yes
+    - name: Extend the Logical Volume
+      command: lvextend -L +{{ desired_size_gb }}G /dev/{{ lv_name }}
+      changed_when: false  # Mark as changed only when LV size actually changes
 
     - name: Resize the Filesystem
-      command: resize2fs {{ mount_point }}
-      when: lv_device_result.stdout != '' and lv_device_result.stdout == lv_path
-      become: yes
+      command: xfs_growfs {{ mount_point }}
