@@ -1,3 +1,4 @@
-mount_point: "/ansibletest"
-target_device: "/dev/sdc" 
-desired_size: "20g"  
+desired_size: "2"
+lv_path: "/dev/vg_test/lv_test"  
+lv_device: "/dev/vg_test/lv_test" 
+mount_point: "/ansibletest"  
