@@ -1,3 +1,3 @@
 mount_point: "/ansibletest"
-target_device: "/dev/sdc" # Replace with the actual device and partition
-desired_size: "10G"  # Replace with your desired size
+target_device: "/dev/sdc" 
+desired_size: "10G"  
