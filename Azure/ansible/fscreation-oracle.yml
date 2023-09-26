@@ -25,7 +25,7 @@
 
     - name: Create Physical Volumes
       shell: |
-        pvcreate /dev/"{{command_output1.stdout}}" /dev/"{{command_output2.stdout}}" /dev/"{{command_output3.stdout}}" /dev/"{{command_output4.stdout}}" 
+        pvcreate -ff /dev/"{{command_output1.stdout}}" /dev/"{{command_output2.stdout}}" /dev/"{{command_output3.stdout}}" /dev/"{{command_output4.stdout}}" 
 
     - name: Create Volume Group
       shell: |
