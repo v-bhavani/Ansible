@@ -19,7 +19,7 @@
           var: extend_size
       - name : Final Lv Size
         set_fact:
-          tmp_size_k: "{{ (extend_size.stdout | int) + (existing_filesize.stdout | int) }}"
+          tmp_size_k: "{{ (extend_size | int) + (existing_filesize.stdout | int) }}"
       - name: Print totalsize
         debug:
           var: tmp_size_k
