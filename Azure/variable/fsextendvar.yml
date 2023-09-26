@@ -1,3 +1,3 @@
-desired_size: "2"
-lv_path: "/dev/vg_test/lv_test"  
-mount_point: "/ansibletest"  
+lv_name: vg_test/lv_test
+mount_point: /ansibletest
+desired_size_gb: 1
