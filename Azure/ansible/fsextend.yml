@@ -1,0 +1,32 @@
+---
+- name: Extend Filesystem
+  hosts: your_target_host
+  become: yes
+ 
+  tasks:
+    - include_vars:
+        file: fsextendvar.yml
+
+    - name: Check current filesystem size
+      command: df -hT {{ mount_point }}
+      register: df_result
+      changed_when: false
+      failed_when: false
+
+    - name: Extend the filesystem if needed
+      command: resize2fs {{ target_device }}
+      when: "'100%' in df_result.stdout and desired_size is defined and desired_size != ''"
+
+    - name: Check if the filesystem was extended
+      command: df -hT {{ mount_point }}
+      register: df_result_new
+      changed_when: false
+      failed_when: false
+      retries: 5
+      delay: 5
+      until: "'100%' not in df_result_new.stdout"
+
+    - name: Verify filesystem size
+      debug:
+        msg: "Filesystem {{ mount_point }} is now {{ df_result_new.stdout_lines[1].split()[-4] }} full."
+
