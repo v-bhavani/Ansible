@@ -1,3 +1,3 @@
-extend_size: "123g"
+extend_size: "15g"
 new_pvs: "/dev/disk/azure/scsi1/lun"
-filesystemname: "/usr/sap"
+filesystemname: "/ansibletest"
