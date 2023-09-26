@@ -1,32 +1,26 @@
 ---
 - name: Extend Filesystem
   hosts: all
-  become: yes
- 
   tasks:
-    - include_vars:
-        file: fsextendvar.yml
+    - name: Resize Logical Volume
+      command: lvextend -L +{{ desired_size }}G {{ lv_path }}
+      when: ansible_facts['ansible_mounts'][0]['device'] == lv_device
+      async: 3600
+      poll: 0
+      become: yes
 
-    - name: Check current filesystem size
-      command: df -hT {{ mount_point }}
-      register: df_result
-      changed_when: false
-      failed_when: false
+    - name: Wait for LV resize to complete
+      async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 3600
+      delay: 1
+      when: ansible_facts['ansible_mounts'][0]['device'] == lv_device
+      become: yes
 
-    - name: Extend the filesystem if needed
-      command: resize2fs {{ target_device }}
-      when: "'100%' in df_result.stdout and desired_size is defined and desired_size != ''"
-
-    - name: Check if the filesystem was extended
-      command: df -hT {{ mount_point }}
-      register: df_result_new
-      changed_when: false
-      failed_when: false
-      retries: 5
-      delay: 5
-      until: "'100%' not in df_result_new.stdout"
-
-    - name: Verify filesystem size
-      debug:
-        msg: "Filesystem {{ mount_point }} is now {{ df_result_new.stdout_lines[1].split()[-4] }} full."
+    - name: Resize the Filesystem
+      command: resize2fs {{ mount_point }}
+      when: ansible_facts['ansible_mounts'][0]['device'] == lv_device
+      become: yes
 
