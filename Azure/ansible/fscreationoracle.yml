@@ -3,7 +3,7 @@
   become: yes
   tasks:
     - include_vars:
-        file: fscreationoraclevar.yaml
+        file: fscreationoraclevar.yml
 
     - name: Display contents
       shell: "ls -ll /dev/disk/azure/scsi1/lun1 | awk '{print $11}' | cut -d '/' -f 4-"
