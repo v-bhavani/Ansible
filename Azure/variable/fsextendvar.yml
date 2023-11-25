@@ -1,3 +1,3 @@
-lv_name: "/vg_test23/lv_test34"
-mount_point: "/ansibletest1"
+lv_name: "/vg_fs_test/lv_fs_test"
+mount_point: "/fstest"
 desired_size_gb: 2
