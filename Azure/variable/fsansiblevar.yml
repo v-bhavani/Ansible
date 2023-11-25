@@ -1,0 +1,3 @@
+lv_name: "/vg_fs_test/lv_fs_test"
+mount_point: "/fstest"
+desired_size_gb: 2
