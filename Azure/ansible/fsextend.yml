@@ -8,7 +8,7 @@
         file: fsextendvar.yml
 
     - name: Extend the Logical Volume
-      command: lvextend -L +{{ desired_size_gb }}G /dev/{{ lv_name }}
+      command: lvextend -L {{ desired_size_gb }}G /dev/{{ lv_name }}
       changed_when: false  # Mark as changed only when LV size actually changes
 
     - name: Resize the Filesystem
