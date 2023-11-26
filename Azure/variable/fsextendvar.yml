@@ -1,3 +1,6 @@
-lv_name: "/vg_fs_test/lv_fs_test"
-mount_point: "/fstest"
-desired_size_gb: 13
+# lv_name: "/vg_fs_test/lv_fs_test"
+# mount_point: "/fstest"
+# desired_size_gb: 13
+lv_name: "${var.lv_name}"
+mount_point: "${var.mount_point}"
+desired_size_gb: ${var.size}
