@@ -1,0 +1,39 @@
+---
+- name: Check Password Length
+  hosts: all
+  become: yes  # Run tasks with sudo (or become_user)
+
+  tasks:
+    - name: Check minimum password length
+      command: "grep '^PASS_MIN_LEN' /etc/login.defs"
+      register: min_pass_len
+      ignore_errors: yes
+
+    - name: Check maximum password length
+      command: "grep '^PASS_MAX_LEN' /etc/login.defs"
+      register: max_pass_len
+      ignore_errors: yes
+
+    - name: Check maximum password days
+      command: "grep '^PASS_MAX_DAYS' /etc/login.defs"
+      register: max_pass_days
+      ignore_errors: yes
+
+    - name: Check minimum password days
+      command: "grep '^PASS_MIN_DAYS' /etc/login.defs"
+      register: min_pass_days
+      ignore_errors: yes
+
+    - name: Check password warning age
+      command: "grep '^PASS_WARN_AGE' /etc/login.defs"
+      register: pass_warn_age
+      ignore_errors: yes
+
+    - name: Display password information
+      debug:
+        msg: |
+          Minimum Password Length: {{ min_pass_len.stdout_lines | default('Not found') }}
+          Maximum Password Length: {{ max_pass_len.stdout_lines | default('Not found') }}
+          Maximum Password Days  : {{ max_pass_days.stdout_lines | default('Not found') }}
+          Maximum Password Length: {{ min_pass_days.stdout_lines | default('Not found') }}
+          Maximum Password Length: {{ pass_warn_age.stdout_lines | default('Not found') }}
