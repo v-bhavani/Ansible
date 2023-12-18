@@ -1,0 +1,338 @@
+version: "3.7"
+networks:
+  Demo_BCS:
+    driver: overlay
+volumes:
+  redis-master-volume:
+    driver: local
+  redis-slave-volume:
+    driver: local
+  redis-sentinel-volume:
+    driver: local
+
+services:
+  redis-master:
+    image: bitnami/redis:latest
+    networks:
+      - Demo_BCS
+    ports:
+      - "6379:6379"
+    user: "root"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_APPENDONLY=yes
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - REDIS_EXTRA_FLAGS=--maxmemory 100mb
+    volumes:
+      - 'redis-master-volume:/data'
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+  redis-slave-1:
+    image: bitnami/redis:latest
+    networks:
+      - Demo_BCS
+    ports:
+      - "6379"
+    user: "root"
+    depends_on:
+      - redis-master
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_APPENDONLY=yes
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - REDIS_MASTER_PASSWORD=str0ng_passw0rd
+      - REDIS_EXTRA_FLAGS=--maxmemory 100mb
+    volumes:
+      - 'redis-slave-volume:/data'
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+  redis-slave-2:
+    image: bitnami/redis:latest
+    networks:
+      - Demo_BCS
+    ports:
+      - "6379"
+    user: "root"
+    depends_on:
+      - redis-master
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - REDIS_CONFIG_COMMAND=replica-read-only no
+      - REDIS_APPENDONLY=yes
+      - REDIS_MASTER_PASSWORD=str0ng_passw0rd
+      - REDIS_EXTRA_FLAGS=--maxmemory 100mb
+    volumes:
+      - 'redis-slave-volume:/data'
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+  sentinel:
+    image: bitnami/redis:latest
+    networks:
+      - Demo_BCS
+    ports:
+      - 26379:26379
+    user: "root"
+    environment:
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - REDIS_MASTER_PASSWORD=str0ng_passw0rd
+      - SENTINEL_DOWN_AFTER=5000
+      - SENTINEL_FAILOVER=5000
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_SET=redis-master
+      - SENTINEL_ANNOUNCE_HOSTNAMES=yes
+      - SENTINEL_RESOLVE_HOSTNAMES=yes
+    volumes:
+      - 'redis-sentinel-volume:/bitnami'
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+    entrypoint: |
+      bash -c 'bash -s <<EOF
+      "/bin/bash" -c "cat <<EOF > /bitnami/redis-sentinel/conf/sentinel.conf
+      port 26379
+      dir /tmp
+      sentinel resolve-hostnames yes
+      sentinel monitor master-node redis-master 6379 2
+      sentinel down-after-milliseconds master-node 5000
+      sentinel parallel-syncs master-node 3
+      sentinel announce-port 26379
+      sentinel failover-timeout master-node 5000
+      sentinel auth-pass master-node str0ng_passw0rd
+      EOF"
+      "/bin/bash" -c "redis-sentinel /bitnami/redis-sentinel/conf/sentinel.conf"
+      EOF'
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+  backend:
+    image: 071331301700.dkr.ecr.us-east-1.amazonaws.com/documentdb:API_redis_sentinel3
+    networks:
+      - Demo_BCS
+    ports:
+      - 3001:3001
+    environment:
+      - DB_NAME=symphony
+      - DB_USER=cosmosdb-newcollections
+      - DB_PASS=ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==
+      - DB_HOST=cosmosdb-newcollections.mongo.cosmos.azure.com
+      - DB_PORT=10255
+      - WEB_URL=https://localhost
+      - PASSPHRASE=pass
+      - EMAIL_ID=symphony@beeceeyes.com
+      - EMAIL_SECURE=false
+      - EMAIL_AUTH=true
+      - EMAIL_HOST='smtp-mail.outlook.com'
+      - EMAIL_PASS=BcsW!nn!ngT3am@2022
+      - EMAIL_PORT=587
+      - SYMPHONY_SECRET_KEY=seymourcray
+      - AUTH_ACCESS_KEY=AKIARIUPE5NW22EHD3V6
+      - AUTH_SECRET_KEY=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
+      - AUTH_AWS_REGION=us-east-1
+      - AUTH_AWS_BUCKET_NAME=licensingpublickeys
+      - AUTH_PUBLIC_KEY_PATH=/usr/src/app/bin
+      - AUTH_AWS_PRIVATE_KEY_PATH=BCS-Symphony
+      - REQUESTMAIL=innovators@beeceeyes.com
+      - CUSTOMER_NAME=bcsdemo
+      - TERRAFORM_HOME=/usr/sym
+      - AUTH_API_KEY=116eYd7EFa9Ujh7adpbO74kshM83Xi04aLengbPA
+      - CAN_SECONDARY_HTTP_SERVER_STARTED=false
+      - SECONDARY_SERVER_HTTP_PORT=3002
+      - IS_PRIMARY_SERVER_HTTPS_REQUIRED=true
+      - SYMPHONY_SCHEDULE_SERVICE_DOMAIN=https://10.0.0.9:3002/symphony-scheduler-internal/api
+      - ALLOW_LIST_API=https://10.0.0.9:3002,https://10.0.0.9:3001,https://10.0.0.9:3003
+      - IS_HTTPS=true
+      - SCHEDULER_PORT=3002
+      - LOGGER_AZURE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=bcsksdiag;AccountKey=nHszUcnHfQwA7rniirFTXsdywSa6kkTrFZuXJln8e/VAHgOxm6WLn4sqo0CHYBC6ZpZ0Dagv++TbYrx89IE7+w==;EndpointSuffix=core.windows.net
+      - LOGGER_AZURE_TABLE_NAME=test
+      - API_GENERIC=true
+      - REDIS_HOST=redis-master
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - SYMPHONY_DND_SERVICE_DOMAIN=https://10.0.0.9:3005/symphony-dnd-internal/api
+      - PING_SSO_CLIENT_ID=43015a74-71dd-4215-b9b8-c27753e90907
+      - PING_SSO_REDIRECT_URL=https://20.168.115.200/api/pingfederate/callback
+      - PING_SSO_SECRET=r~IqpbEAJQ3SKlMe98Op7k9Y9GAzw2uikLHjSeO7YXBTLPNa38jAa.FeKqu81eS6
+      - PING_SSO_AUTH_URL=https://auth.pingone.com/cbb48be8-8587-4807-94b5-e43d3b2a37fa/as/authorize
+      - PING_SSO_TOKEN_URL=https://auth.pingone.com/cbb48be8-8587-4807-94b5-e43d3b2a37fa/as/token
+      - PING_SSO_JWKS_URL=https://auth.pingone.com/cbb48be8-8587-4807-94b5-e43d3b2a37fa/as/jwks
+      - AZURE_ADFS_TENANT_ID=0d6f58e0-503f-4f6b-bce8-b55d068e13bc
+      - AZURE_ADFS_CLIENT_ID=ff4ac332-5227-4643-886e-1206cae7f927
+      - GOOGLE_RECAPTCHA_SECRET_KEY=6Lc63R4gAAAAAP-wOifWdzKykJ092IupJXIfwIZG
+      - DATABASE_TYPE=documentdb
+      - DOCUMENT_DB_MONGO_URL=mongodb://cosmosdb-newcollections:ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==@cosmosdb-newcollections.mongo.cosmos.azure.com:10255/symphony?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cosmosdb-newcollections@
+      - REDIS_SENTINEL_ENABLED=true
+      - REDIS_SENTINEL_HOST=sentinel
+      - REDIS_SENTINEL_PORT=26379
+      - REDIS_MASTER_NAME=master-node
+      - NODE_ENV=production
+    volumes:
+      - /srv/rea:/usr/src/app/bin/
+      - //var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+  frontend:
+    image: 071331301700.dkr.ecr.us-east-1.amazonaws.com/documentdb:UI4
+    networks:
+      - Demo_BCS
+    ports:
+      - 8080:8080
+      - 8081:8081
+    environment:
+      - REACT_APP_SERVER_URL=https://20.168.115.200:3001/symphony-core/api
+      - REACT_APP_SERVER_DND_URL=https://20.168.115.200:3005/symphony-dnd/api
+      - REACT_APP_WEBSOCKET_SERVER_URL=wss:/20.168.115.200:3001
+      - SKIP_PREFLIGHT_CHECK=true
+      - PORT=3001
+      - REACT_APP_AZURE_CLIENT_ID=24a60cba-a217-4ca9-8573-4708add22cea
+      - REACT_APP_AZURE_TENANT_ID=0d6f58e0-503f-4f6b-bce8-b55d068e13bc
+      - REACT_APP_COPY_RIGHT_ENABLED=false
+      - REACT_APP_CUSTOMER_HEADER_LOGO_ENABLED=true
+      - REACT_APP_CUSTOMER_FOOTER_LOGO_ENABLED=false
+      - REACT_APP_CUSTOMER=bcsdemo
+      - GENERATE_SOURCEMAP=false
+      - NODE_OPTIONS=--max_old_space_size=12218
+      - REACT_APP_WEBINAR_URL=https://symphonynodeimages.s3.amazonaws.com/datprof_and_bcs.mp4
+      - REACT_APP_GOOGLE_RECAPTCHA_SITE_KEY=6Lc63R4gAAAAAJqQ_BHdIYjt1DgnYcwkRnsxPGZR
+      - REACT_APP_AZURE_ADFS_FLAG=true
+      - REACT_APP_PINGID_SSO_LOGOUT_URL=https://auth.pingone.com/cbb48be8-8587-4807-94b5-e43d3b2a37fa/as/signoff
+      - REACT_APP_IS_PINGID_SSO_ENABLED=true
+      - REACT_APP_URL=https://20.168.115.200
+      - REACT_APP_APPSTORE_URL=https://20.168.115.200:3003/symphony-appstore/api
+      - REACT_APP_TITLE=Symphony
+      - REACT_APP_ENVIRONMENT=dev
+      - REACT_APP_DND_WEBSOCKET_SERVER_URL=ws://20.168.115.200:3005/yjs
+    volumes:
+      - /srv/rea:/usr/src/app/bin/
+      - //var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+  scheduler:
+    image: 071331301700.dkr.ecr.us-east-1.amazonaws.com/documentdb:scheduler2
+    networks:
+      - Demo_BCS
+    ports:
+      - 3002:3002
+    environment:
+      - DB_NAME=symphony
+      - DB_USER=cosmosdb-newcollections
+      - DB_PASS=ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==
+      - DB_HOST=cosmosdb-newcollections.mongo.cosmos.azure.com
+      - DB_PORT=10255
+      - SYMPHONY_API_SERVICE_DOMAIN=https://10.0.0.9:3001/symphony-core-internal/api
+      - SYMPHONY_API_SERVICE_DND_DOMAIN=https://10.0.0.9:3005/symphony-dnd-internal/api
+      - IS_HTTPS=true
+      - ALLOW_LIST_SCHEDULE=https://10.0.0.9:3001,https://10.0.0.9:3002,https://10.0.0.9:3005
+      - ALLOW_LIST_API=https://10.0.0.9:3002,https://10.0.0.9:3001,https://10.0.0.9:3003
+      - SCHEDULER_PORT=3002
+      - AUTH_API_KEY=116eYd7EFa9Ujh7adpbO74kshM83Xi04aLengbPA
+      - AUTH_AWS_BUCKET_NAME=licensingpublickeys
+      - AUTH_AWS_PRIVATE_KEY_PATH=BCS-Symphony
+      - AUTH_PUBLIC_KEY_PATH=/usr/src/app/bin
+      - CAN_SECONDARY_HTTP_SERVER_STARTED=false
+      - CUSTOMER_NAME=bcsdemo
+      - SYMPHONY_SECRET_KEY=seymourcray
+      - SECONDARY_SERVER_HTTP_PORT=3002
+      - REQUESTMAIL=innovators@beeceeyes.com
+      - DATABASE_TYPE=documentdb
+      - DOCUMENT_DB_MONGO_URL=mongodb://cosmosdb-newcollections:ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==@cosmosdb-newcollections.mongo.cosmos.azure.com:10255/symphony?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cosmosdb-newcollections@
+    volumes:
+      - /srv/rea:/usr/src/app/bin/
+      - //var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+  dnd:
+    image: 071331301700.dkr.ecr.us-east-1.amazonaws.com/documentdb:DND_redis_sentinel2
+    networks:
+      - Demo_BCS
+    ports:
+      - 3005:3005
+    environment:
+      - DB_NAME=symphony
+      - DB_USER=cosmosdb-newcollections
+      - DB_PASS=ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==
+      - DB_HOST=cosmosdb-newcollections.mongo.cosmos.azure.com
+      - DB_PORT=10255
+      - DND_PORT=3005
+      - WEB_URL=https://localhost
+      - EMAIL_ID=symphony@beeceeyes.com
+      - EMAIL_HOST='smtp.gmail.com'
+      - EMAIL_PORT=587
+      - EMAIL_AUTH=true
+      - EMAIL_SECURE=false
+      - EMAIL_PASS=BcsW!nn!ngT3am@2022
+      - SPLUNK_TOKEN=c91679e1-e3e2-4d94-b25f-074fa028db68
+      - SPLUNK_HOST=20.168.115.200
+      - PASSPHRASE=pass
+      - SYMPHONY_SECRET_KEY=seymourcray
+      - AUTH_ACCESS_KEY=AKIARIUPE5NW22EHD3V6
+      - AUTH_SECRET_KEY=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
+      - AUTH_AWS_REGION=us-east-1
+      - AUTH_AWS_BUCKET_NAME=licensingpublickeys
+      - AUTH_AWS_PRIVATE_KEY_PATH=BCS-Symphony
+      - AUTH_PUBLIC_KEY_PATH=/usr/src/app/bin
+      - REQUEST_EMAIL_ID=innovators@beeceeyes.com
+      - AUTH_API_KEY=116eYd7EFa9Ujh7adpbO74kshM83Xi04aLengbPA
+      - CUSTOMER_NAME=bcsdemo
+      - APP_LOG_LEVEL=info
+      - IS_HTTPS=true
+      - IS_SPLUNK_LOGS_ENABLED=false
+      - API_GENERIC=true
+      - TERRAFORM_HOME=/usr/sym
+      - LOGGER_AZURE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=bcsksdiag;AccountKey=nHszUcnHfQwA7rniirFTXsdywSa6kkTrFZuXJln8e/VAHgOxm6WLn4sqo0CHYBC6ZpZ0Dagv++TbYrx89IE7+w==;EndpointSuffix=core.windows.net
+      - LOGGER_AZURE_TABLE_NAME=test
+      - SYMPHONY_SCHEDULE_SERVICE_DOMAIN=https://10.0.0.9:3002//symphony-scheduler-internal/api
+      - ALLOW_LIST_API=https://10.0.0.9:3002,https://10.0.0.9:3001,https://10.0.0.9:3003
+      - GOOGLE_RECAPTCHA_SECRET_KEY=6LfD1x4gAAAAAMPgjFAZAKUwSIzBfa9sU-6j8wYy
+      - MSI_AUTH=false
+      - REDIS_HOST=redis-master
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=str0ng_passw0rd
+      - APP_ENVIRONMENT=dev
+      - DATABASE_TYPE=documentdb
+      - ANSIBLE_HOME=/usr/sym
+      - DOCUMENT_DB_MONGO_URL=mongodb://cosmosdb-newcollections:ZH8DwUmSCqCWhLedDtBKaTAuBiOpJtRm73L9XKpWBWGCjWr2WNLJVcughQlpERApfvxnkYCuZFWWACDbfSzI2w==@cosmosdb-newcollections.mongo.cosmos.azure.com:10255/symphony?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cosmosdb-newcollections@
+      - REDIS_SENTINEL_ENABLED=true
+      - REDIS_SENTINEL_HOST=sentinel
+      - REDIS_SENTINEL_PORT=26379
+      - REDIS_MASTER_NAME=master-node
+    volumes:
+      - /srv/rea:/usr/src/app/bin/
+      - //var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
