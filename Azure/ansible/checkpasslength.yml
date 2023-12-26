@@ -1,7 +1,7 @@
 ---
 - name: Check Password Length
   hosts: all
-  become: yes  # Run tasks with sudo (or become_user)
+  become: true  # Run tasks with sudo (or become_user)
 
   tasks:
     - name: Check minimum password length
