@@ -35,5 +35,5 @@
           Minimum Password Length: {{ min_pass_len.stdout_lines | default('Not found') }}
           Maximum Password Length: {{ max_pass_len.stdout_lines | default('Not found') }}
           Maximum Password Days  : {{ max_pass_days.stdout_lines | default('Not found') }}
-          Maximum Password Length: {{ min_pass_days.stdout_lines | default('Not found') }}
-          Maximum Password Length: {{ pass_warn_age.stdout_lines | default('Not found') }}
+          Minimum Password Days: {{ min_pass_days.stdout_lines | default('Not found') }}
+          Password warning Age: {{ pass_warn_age.stdout_lines | default('Not found') }}
