@@ -13,18 +13,10 @@
              cmd: rpm -qa --last | head -n 5 | tail -n 5
            register: dpkg_log_result
 
-         - name: Display the result
-           debug:
-             var: dpkg_log_result.stdout_lines
-
          - name: Display upgradable packages count for SUSE
            shell:
              cmd: zypper list-patches | grep "applicable patches" | wc -l
            register: upgradable_packages_count
-
-         - name: Display the result
-           debug:
-             var: upgradable_packages_count.stdout
 
          - name: Display kernel version for SUSE
            shell:
@@ -33,7 +25,13 @@
 
          - name: Display the result
            debug:
-             var: kernel_version.stdout_lines
+             msg: |
+               SUSE Patch Details:
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
+               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
+               Kernel Version:
+               {{ kernel_version.stdout_lines | join('\n') }}
 
       when: ansible_facts['distribution'] == 'SUSE'
 
@@ -44,18 +42,10 @@
              cmd: rpm -qa --last | head -n 5 | tail -n 5
            register: dpkg_log_result
 
-         - name: Display the result
-           debug:
-             var: dpkg_log_result.stdout_lines
-
          - name: Display upgradable packages count for RedHat
            shell:
              cmd: yum check-update | tail -n +3 | awk '{print $1}' | wc -l
            register: upgradable_packages_count
-
-         - name: Display the result
-           debug:
-             var: upgradable_packages_count.stdout
 
          - name: Display kernel version for RedHat
            shell:
@@ -64,7 +54,13 @@
 
          - name: Display the result
            debug:
-             var: kernel_version.stdout_lines
+             msg: |
+               RedHat Patch Details:
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
+               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
+               Kernel Version:
+               {{ kernel_version.stdout_lines | join('\n') }}
 
       when: ansible_facts['distribution'] == 'RedHat'
 
@@ -75,18 +71,10 @@
              cmd: cat /var/log/dpkg.log | grep "upgrade" | tail -n 5
            register: dpkg_log_result
 
-         - name: Display the result
-           debug:
-             var: dpkg_log_result.stdout_lines
-
          - name: Display upgradable packages count for Ubuntu
            shell:
              cmd: apt list --upgradable 2>/dev/null | grep -c "/"
            register: upgradable_packages_count
-
-         - name: Display the result
-           debug:
-             var: upgradable_packages_count.stdout
 
          - name: Display kernel version for Ubuntu
            shell:
@@ -95,6 +83,12 @@
 
          - name: Display the result
            debug:
-             var: kernel_version.stdout
+             msg: |
+               Ubuntu Patch Details:
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
+               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
+               Kernel Version:
+               {{ kernel_version.stdout | join('\n') }}
 
       when: ansible_facts['distribution'] == 'Ubuntu'
