@@ -15,7 +15,9 @@
 
          - name: Display the result
            debug:
-             msg: "{{ dpkg_log_result.stdout_lines | join('\n') }}"
+             msg: |
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
 
          - name: Display upgradable packages count for SUSE
            shell:
@@ -24,7 +26,7 @@
 
          - name: Display the result
            debug:
-             msg: "{{ upgradable_packages_count.stdout | int }}"
+             msg: "Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}"
 
          - name: Display kernel version for SUSE
            shell:
@@ -33,7 +35,9 @@
 
          - name: Display the result
            debug:
-             msg: "{{ kernel_version.stdout_lines | join('\n') }}"
+             msg: |
+               Kernel Version:
+               {{ kernel_version.stdout_lines | join('\n') }}
 
       when: ansible_facts['distribution'] == 'SUSE'
 
@@ -46,7 +50,9 @@
 
          - name: Display the result
            debug:
-             msg: "{{ dpkg_log_result.stdout_lines | join('\n') }}"
+             msg: |
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
 
          - name: Display upgradable packages count for RedHat
            shell:
@@ -55,7 +61,7 @@
 
          - name: Display the result
            debug:
-             msg: "{{ upgradable_packages_count.stdout | int }}"
+             msg: "Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}"
 
          - name: Display kernel version for RedHat
            shell:
@@ -64,7 +70,9 @@
 
          - name: Display the result
            debug:
-             msg: "{{ kernel_version.stdout_lines | join('\n') }}"
+             msg: |
+               Kernel Version:
+               {{ kernel_version.stdout_lines | join('\n') }}
 
       when: ansible_facts['distribution'] == 'RedHat'
 
@@ -77,7 +85,9 @@
 
          - name: Display the result
            debug:
-             msg: "{{ dpkg_log_result.stdout_lines | join('\n') }}"
+             msg: |
+               Upgrade Entries:
+               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
 
          - name: Display upgradable packages count for Ubuntu
            shell:
@@ -86,7 +96,7 @@
 
          - name: Display the result
            debug:
-             msg: "{{ upgradable_packages_count.stdout | int }}"
+             msg: "Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}"
 
          - name: Display kernel version for Ubuntu
            shell:
@@ -95,6 +105,8 @@
 
          - name: Display the result
            debug:
-             msg: "{{ kernel_version.stdout | join('\n') }}"
+             msg: |
+               Kernel Version:
+               {{ kernel_version.stdout | join('\n') }}
 
       when: ansible_facts['distribution'] == 'Ubuntu'
