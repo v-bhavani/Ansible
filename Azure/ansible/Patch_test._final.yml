@@ -1,5 +1,5 @@
 ---
-- name: Display System Patch Details
+- name: Generate Patch Details CSV
   hosts: all
   become: true
   become_method: sudo
@@ -8,87 +8,69 @@
   tasks:
     - name: Display Patch Details for SUSE
       block:
-         - name: Display last 5 upgrade entries for SUSE
-           shell:
-             cmd: rpm -qa --last | head -n 5 | tail -n 5
-           register: dpkg_log_result
+        - name: Display last 5 upgrade entries for SUSE
+          shell:
+            cmd: rpm -qa --last | head -n 5 | tail -n 5
+          register: dpkg_log_result_suse
 
-         - name: Display upgradable packages count for SUSE
-           shell:
-             cmd: zypper list-patches | grep "applicable patches" | wc -l
-           register: upgradable_packages_count
+        - name: Display upgradable packages count for SUSE
+          shell:
+            cmd: zypper list-patches | grep "applicable patches" | wc -l
+          register: upgradable_packages_count_suse
 
-         - name: Display kernel version for SUSE
-           shell:
-             cmd: rpm -qa kernel --last | head -n 2
-           register: kernel_version
-
-         - name: Display the result
-           debug:
-             msg: |
-               SUSE Patch Details:
-               Upgrade Entries:
-               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
-               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
-               Kernel Version:
-               {{ kernel_version.stdout_lines | join('\n') }}
+        - name: Display kernel version for SUSE
+          shell:
+            cmd: rpm -qa kernel --last | head -n 2
+          register: kernel_version_suse
 
       when: ansible_facts['distribution'] == 'SUSE'
 
     - name: Display Patch Details for RedHat
       block:
-         - name: Display last 5 upgrade entries for RedHat
-           shell:
-             cmd: rpm -qa --last | head -n 5 | tail -n 5
-           register: dpkg_log_result
+        - name: Display last 5 upgrade entries for RedHat
+          shell:
+            cmd: rpm -qa --last | head -n 5 | tail -n 5
+          register: dpkg_log_result_redhat
 
-         - name: Display upgradable packages count for RedHat
-           shell:
-             cmd: yum check-update | tail -n +3 | awk '{print $1}' | wc -l
-           register: upgradable_packages_count
+        - name: Display upgradable packages count for RedHat
+          shell:
+            cmd: yum check-update | tail -n +3 | awk '{print $1}' | wc -l
+          register: upgradable_packages_count_redhat
 
-         - name: Display kernel version for RedHat
-           shell:
-             cmd: rpm -qa kernel --last | head -n 2
-           register: kernel_version
-
-         - name: Display the result
-           debug:
-             msg: |
-               RedHat Patch Details:
-               Upgrade Entries:
-               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
-               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
-               Kernel Version:
-               {{ kernel_version.stdout_lines | join('\n') }}
+        - name: Display kernel version for RedHat
+          shell:
+            cmd: rpm -qa kernel --last | head -n 2
+          register: kernel_version_redhat
 
       when: ansible_facts['distribution'] == 'RedHat'
 
     - name: Display Patch Details for Ubuntu
       block:
-         - name: Display last 5 upgrade entries for Ubuntu
-           shell:
-             cmd: cat /var/log/dpkg.log | grep "upgrade" | tail -n 5
-           register: dpkg_log_result
+        - name: Display last 5 upgrade entries for Ubuntu
+          shell:
+            cmd: cat /var/log/dpkg.log | grep "upgrade" | tail -n 5
+          register: dpkg_log_result_ubuntu
 
-         - name: Display upgradable packages count for Ubuntu
-           shell:
-             cmd: apt list --upgradable 2>/dev/null | grep -c "/"
-           register: upgradable_packages_count
+        - name: Display upgradable packages count for Ubuntu
+          shell:
+            cmd: apt list --upgradable 2>/dev/null | grep -c "/"
+          register: upgradable_packages_count_ubuntu
 
-         - name: Display kernel version for Ubuntu
-           shell:
-             cmd: uname -v
-           register: kernel_version
-
-         - name: Display the result
-           debug:
-             msg: |
-               Ubuntu Patch Details:
-               Upgrade Entries:
-               {{ dpkg_log_result.stdout_lines | join('\n  - ') }}
-               Upgradable Packages Count: {{ upgradable_packages_count.stdout | int }}
-               Kernel Version:
-               {{ kernel_version.stdout | join('\n') }}
+        - name: Display kernel version for Ubuntu
+          shell:
+            cmd: uname -v
+          register: kernel_version_ubuntu
 
       when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Ensure CSV file exists
+      file:
+        path: patch_details.csv
+        state: touch
+      delegate_to: localhost
+
+    - name: Append to CSV file
+      lineinfile:
+        path: patch_details.csv
+        line: "{{ lookup('template', 'patch_details_template.j2') }}"
+      delegate_to: localhost
