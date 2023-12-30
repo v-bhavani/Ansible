@@ -1,0 +1,8 @@
+"Distribution","Hostname","Upgrade Entries","Upgradable Packages Count","Kernel Version"
+{% if ansible_facts['distribution'] == 'SUSE' %}
+"SUSE","{{ ansible_hostname }}","{{ dpkg_log_result_suse.stdout_lines | join('\n') }}","{{ upgradable_packages_count_suse.stdout | int }}","{{ kernel_version_suse.stdout_lines | join('\n') }}"
+{% elif ansible_facts['distribution'] == 'RedHat' %}
+"RedHat","{{ ansible_hostname }}","{{ dpkg_log_result_redhat.stdout_lines | join('\n') }}","{{ upgradable_packages_count_redhat.stdout | int }}","{{ kernel_version_redhat.stdout_lines | join('\n') }}"
+{% elif ansible_facts['distribution'] == 'Ubuntu' %}
+"Ubuntu","{{ ansible_hostname }}","{{ dpkg_log_result_ubuntu.stdout_lines | join('\n') }}","{{ upgradable_packages_count_ubuntu.stdout | int }}","{{ kernel_version_ubuntu.stdout_lines | join('\n') }}"
+{% endif %}
