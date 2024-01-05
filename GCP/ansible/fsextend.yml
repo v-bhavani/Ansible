@@ -3,7 +3,7 @@
   become: true
 
   vars_files:
-  - variables.yml
+  - varfs.yml
 
   tasks:
   - name: Fetch device name for {{ mount_path }}
