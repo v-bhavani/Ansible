@@ -1,0 +1,17 @@
+- name: Extend filesystem dynamically
+  hosts: localhost
+  become: true
+
+  vars_files:
+  - variables.yml
+
+  tasks:
+  - name: Fetch device name for {{ mount_path }}
+    command: findmnt --noheadings --output SOURCE --first-only {{ mount_path }}
+    register: device_name_result
+
+  - set_fact:
+      device_name: "{{ device_name_result.stdout.strip() }}"
+
+  - name: Resize the filesystem
+    command: resize2fs {{ device_name }}
