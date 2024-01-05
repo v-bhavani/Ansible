@@ -1,4 +1,4 @@
-name: "BCS-ALB"
+    name: "BCS-ALB"
     region: "us-east-1"
     vpc_id: "vpc-37d6a34a"
     protocol: "HTTP"
