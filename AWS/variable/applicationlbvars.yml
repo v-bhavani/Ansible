@@ -5,6 +5,4 @@
     listener_port: "80"
     instance_port: "80"
     incoming_cidr_ip: "0.0.0.0/0"
-    subnets:
-       - "subnet-a93114f6"
-       - "subnet-f979219f"
+    subnets: "subnet-a93114f6" , "subnet-f979219f"
