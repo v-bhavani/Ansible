@@ -1,0 +1,13 @@
+---
+- name: Execute lsblk command
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Run lsblk
+      command: lsblk
+      register: lsblk_output
+
+    - name: Display lsblk output
+      debug:
+        var: lsblk_output.stdout_lines
