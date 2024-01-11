@@ -1,0 +1,4 @@
+# variables.yaml
+
+iam_user_name: "testiam"
+max_access_keys: 2
