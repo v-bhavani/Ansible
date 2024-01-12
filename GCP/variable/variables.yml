@@ -1,4 +1,2 @@
-# variables.yml
-
 iam_user_name: "testiam"
-max_access_keys: 2
+max_access_keys: "2"
