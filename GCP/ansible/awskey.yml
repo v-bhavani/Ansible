@@ -5,7 +5,7 @@
   gather_facts: false
 
   vars_files:
-    - varfs.yml
+    - variables.yml
 
   tasks:
     - name: Check if AWS CLI is installed
