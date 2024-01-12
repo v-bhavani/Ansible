@@ -1,5 +1,0 @@
-iam_user_name: "testiam"
-max_access_keys: "2"
-extend_size: "15g"
-new_pvs: "dev/vg_test/lv_test"
-filesystemname: "/ansibletest"
