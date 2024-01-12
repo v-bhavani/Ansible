@@ -1,0 +1,41 @@
+# rotate_keys.yml
+
+- name: Rotate IAM User Access Keys
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - variables.yml
+
+  tasks:
+    - name: Check if AWS CLI is installed
+      command: "aws --version"
+      register: aws_cli_check
+      ignore_errors: true
+
+    - name: Rotate IAM user's access keys
+      command: "aws iam create-access-key --user-name {{ iam_user_name }} --output json"
+      register: new_key
+      when: aws_cli_check.rc == 0
+
+    - name: Get existing access keys
+      command: "aws iam list-access-keys --user-name {{ iam_user_name }} --output json"
+      register: access_keys
+      when: aws_cli_check.rc == 0
+
+    - name: Debug information for access keys
+      debug:
+        var: access_keys.stdout_lines
+      when: aws_cli_check.rc == 0
+
+    - name: Deactivate old access key
+      command: "aws iam update-access-key --user-name {{ iam_user_name }} --access-key-id {{ access_keys.stdout.AccessKeyMetadata[0].AccessKeyId }} --status Inactive"
+      when: aws_cli_check.rc == 0 and access_keys.stdout.AccessKeyMetadata | length >= max_access_keys
+
+    - name: Configure AWS CLI with new access key
+      command: "aws configure set aws_access_key_id '{{ new_key.stdout.AccessKey.AccessKeyId }}'"
+      when: aws_cli_check.rc == 0
+
+    - name: Configure AWS CLI (contd.) with new secret key
+      command: "aws configure set aws_secret_access_key '{{ new_key.stdout.AccessKey.SecretAccessKey }}'"
+      when: aws_cli_check.rc == 0
