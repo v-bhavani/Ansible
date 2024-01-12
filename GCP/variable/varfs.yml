@@ -1,2 +1,4 @@
 # variables.yml
 mount_path: /mountext4
+iam_user_name: "testiam"
+max_access_keys: 2
