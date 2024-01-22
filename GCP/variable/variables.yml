@@ -1,7 +1,8 @@
-#iam
+[12:51 PM] Hariharan Ramamoorthi
 iam_user_name: "testiam"
 
-#max
-max_access_keys: "2"
+max_access_keys: 2
 
+aws_access_key: "AKIARBG5NJFCI2XHZONX"
 
+aws_secret_key: "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"
