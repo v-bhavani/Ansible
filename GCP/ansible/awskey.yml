@@ -1,41 +1,35 @@
-- name: Rotate IAM User Access Keys
+- name: Rotate AWS IAM Access Keys
   hosts: localhost
   gather_facts: false
  
-  vars:
-    aws_cli_path: "/usr/bin/aws"  # Specify the path to the AWS CLI executable
-    iam_user_name: "testiam"
-    max_access_keys: 2  # Maximum number of access keys allowed per user
+  vars_files:
+    - variables.yaml
  
   tasks:
-    - name: Check if AWS CLI is installed
-      command: "{{ aws_cli_path }} --version"
-      register: aws_cli_check
-      ignore_errors: true
+    - name: Authenticate with AWS
+      command: "aws configure set aws_access_key_id '{{ aws_access_key }}'"
+      when: current_keys is not defined  # Only authenticate if not already authenticated
  
-    - name: Rotate IAM user's access keys
-      command: "{{ aws_cli_path }} iam create-access-key --user-name {{ iam_user_name }} --output json"
+    - name: Set AWS secret access key
+      command: "aws configure set aws_secret_access_key '{{ aws_secret_key }}'"
+      when: current_keys is not defined  # Only set if not already authenticated
+ 
+    - name: Get current access keys for the user
+      command: "aws iam list-access-keys --user-name '{{ iam_user_name }}' --output json"
+      register: current_keys
+      changed_when: current_keys.stdout | from_json | json_query('AccessKeyMetadata | length(@)') > 0
+ 
+    - name: Create a new access key
+      command: "aws iam create-access-key --user-name '{{ iam_user_name }}' --output json"
       register: new_key
-      when: aws_cli_check.rc == 0
+      ignore_errors: yes
  
-    - name: Get existing access keys
-      command: "{{ aws_cli_path }} iam list-access-keys --user-name {{ iam_user_name }} --output json"
-      register: access_keys
-      when: aws_cli_check.rc == 0
  
-    - name: Debug information for access keys
-      debug:
-        var: access_keys.stdout_lines
-      when: aws_cli_check.rc == 0
+    # Add tasks to update the access key in your application/configurations
+    # ...
  
-    - name: Deactivate old access key
-      command: "{{ aws_cli_path }} iam update-access-key --user-name {{ iam_user_name }} --access-key-id {{ access_keys.stdout.AccessKeyMetadata[0].AccessKeyId }} --status Inactive"
-      when: aws_cli_check.rc == 0 and access_keys.stdout.AccessKeyMetadata | length >= max_access_keys
- 
-    - name: Configure AWS CLI with new access key
-      command: "{{ aws_cli_path }} configure set aws_access_key_id '{{ new_key.stdout.AccessKey.AccessKeyId }}'"
-      when: aws_cli_path is defined and aws_cli_check.rc == 0
- 
-    - name: Configure AWS CLI (contd.) with new secret key
-      command: "{{ aws_cli_path }} configure set aws_secret_access_key '{{ new_key.stdout.AccessKey.SecretAccessKey }}'"
-      when: aws_cli_path is defined and aws_cli_check.rc == 0
+    # Optionally, you may want to delete old access keys if needed
+    # - name: Delete old access keys
+    #   command: "aws iam delete-access-key --user-name '{{ iam_user_name }}' --access-key-id '{{ item.access_key_id }}'"
+    #   with_items: "{{ current_keys.stdout | from_json | json_query('AccessKeyMetadata[*]') }}"
+    #   when: current_keys.stdout | from_json | json_query('AccessKeyMetadata | length(@)') > 0
