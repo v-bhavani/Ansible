@@ -6,9 +6,7 @@
     remote_user: ubuntu
     tasks:
       - name: Swarm Init
-        command:
-          - sudo usermod -aG docker {{remote_user}}
-          - docker swarm init --advertise-addr {{ inventory_hostname }}
+        command: sudo usermod -aG docker {{remote_user}} && docker swarm init --advertise-addr {{ inventory_hostname }}
 
       - name: Get Worker Token
         command: docker swarm join-token worker -q
@@ -35,9 +33,7 @@
       master: "{{ hostvars[groups['masters'][0]]['inventory_hostname'] }}"
     tasks:
       - name: Join Swarm Cluster as a Worker
-        command:
-          - sudo usermod -aG docker {{remote_user}}
-          - sudo docker swarm join --token {{ token }} {{ master }}:2377
+        command: sudo usermod -aG docker {{remote_user}} && sudo docker swarm join --token {{ token }} {{ master }}:2377
         register: worker
 
       - name: Show Results
