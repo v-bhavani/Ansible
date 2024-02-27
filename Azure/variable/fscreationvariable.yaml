@@ -1,6 +1,6 @@
 vg_name: "vg_test"
 lv_name: "lv_test"
-lun: "0"
+lun: "1"
 dir: "/ansibletest"
 ftype: "xfs"
 size: "10g"
