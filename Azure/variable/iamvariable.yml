@@ -1,0 +1,4 @@
+iam_user_name: "$user"
+max_access_keys: 2
+aws_access_key: "$Accesskey"
+aws_secret_key: "$Secretkey"
