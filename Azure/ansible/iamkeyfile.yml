@@ -1,0 +1,36 @@
+- name: Rotate AWS IAM Access Keys
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - variable.yml
+
+  tasks:
+    - name: Authenticate with AWS
+      command: "aws configure set aws_access_key_id '{{ aws_access_key }}'"
+      when: current_keys is not defined  # Only authenticate if not already authenticated
+
+    - name: Set AWS secret access key
+      command: "aws configure set aws_secret_access_key '{{ aws_secret_key }}'"
+      when: current_keys is not defined  # Only set if not already authenticated
+
+    - name: Get current access keys for the user
+      command: "aws iam list-access-keys --user-name '{{ iam_user_name }}' --output json"
+      register: current_keys
+      changed_when: current_keys.stdout | from_json | json_query('AccessKeyMetadata | length(@)') > 0
+
+    - name: Create a new access key
+      command: "aws iam create-access-key --user-name '{{ iam_user_name }}' --output json"
+      register: new_key
+      ignore_errors: yes
+
+
+
+    # Add tasks to update the access key in your application/configurations
+    # ...
+
+    # Optionally, you may want to delete old access keys if needed
+    # - name: Delete old access keys
+    #   command: "aws iam delete-access-key --user-name '{{ iam_user_name }}' --access-key-id '{{ item.access_key_id }}'"
+    #   with_items: "{{ current_keys.stdout | from_json | json_query('AccessKeyMetadata[*]') }}"
+    #   when: current_keys.stdout | from_json | json_query('AccessKeyMetadata | length(@)') > 0
