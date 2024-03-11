@@ -4,7 +4,7 @@
   
   tasks:
     - include_vars:
-        file: fscreationvariable.yaml
+        file: iamvariable.yml
         
     - name: Authenticate with AWS
       command: "aws configure set aws_access_key_id '{{ aws_access_key }}'"
