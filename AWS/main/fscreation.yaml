@@ -13,7 +13,7 @@
 
     - name: task for creating volume group
       lvg:
-          vg: "{{value1}}"
+          vg: "{{vg_name}}"
           pvs: "{{pv}}"
           pesize: 16
 
