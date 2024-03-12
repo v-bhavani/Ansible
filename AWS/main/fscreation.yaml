@@ -19,25 +19,25 @@
 
     - name: task for creating logical volume
       lvol:
-          vg: "{{value1}}"
+          vg: "{{vg_name}}"
           lv:  mount_lv
-          size: "{{size}}"
+          size: "{{extend_size}}"
           force: yes
 
     - name: Create directory mountpoint if does not exist
       file:
-        path: "{{dir}}"
+        path: "/mount"
         state: directory
         mode: '0777'
 
     - name: format the xfs filesystem
       filesystem:
-        fstype: "{{ftype}}"
+        fstype: "mkfs.xfs"
         dev: /dev/mount_vg/mount_lv
 
     - name: mount the lv on /mountpoint
       mount:
-        path: "{{dir}}"
+        path: "/mount"
         src: /dev/mount_vg/mount_lv
-        fstype: "{{ftype}}"
+        fstype: "mkfs.xfs"
         state: mounted
