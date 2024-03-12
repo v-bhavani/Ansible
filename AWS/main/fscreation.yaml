@@ -32,12 +32,12 @@
 
     - name: format the xfs filesystem
       filesystem:
-        fstype: "mkfs.xfs"
+        fstype: "xfs"
         dev: /dev/mount_vg/mount_lv
 
     - name: mount the lv on /mountpoint
       mount:
         path: "/mount"
         src: /dev/mount_vg/mount_lv
-        fstype: "mkfs.xfs"
+        fstype: "xfs"
         state: mounted
