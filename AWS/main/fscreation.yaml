@@ -14,7 +14,7 @@
     - name: task for creating volume group
       lvg:
           vg: "{{vg_name}}"
-          pvs: "/dev/sda"
+          pvs: "{{new_pvs}}"
           pesize: 16
 
     - name: task for creating logical volume
