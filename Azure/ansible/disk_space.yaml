@@ -1,0 +1,12 @@
+---
+- name: Run df -h command on remote host
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check disk space usage
+      command: df -h
+      register: disk_space
+ 
+    - name: Print disk space usage
+      debug:
+        var: disk_space.stdout_lines
