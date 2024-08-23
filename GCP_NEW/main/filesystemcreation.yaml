@@ -2,7 +2,7 @@
   hosts: all
   become: true
   vars_files:
-    - vars.yaml
+    - fscreationvar.yaml
 
   tasks:
     - name: Install required packages
