@@ -1,0 +1,56 @@
+- name: Playbook for LVM creation and XFS mount
+  hosts: all
+  become: true
+  vars_files:
+    - filesystemcreationvars.yaml
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - lvm2
+        - xfsprogs
+
+    - name: Create a physical volume
+      command: pvcreate /dev/{{ device_name }}
+      when: device_name is defined
+
+    - name: Create a volume group
+      lvg:
+        vg: "{{ vg_name }}"
+        pvs: "/dev/{{ device_name }}"
+
+    - name: Create a logical volume
+      lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ lv_name }}"
+        size: "{{ lv_size }}"
+        force: yes
+
+    - name: Create mount directory if it does not exist
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+
+    - name: Format the logical volume with XFS
+      filesystem:
+        fstype: xfs
+        dev: "/dev/{{ vg_name }}/{{ lv_name }}"
+
+    - name: Mount the logical volume
+      mount:
+        src: "/dev/{{ vg_name }}/{{ lv_name }}"
+        path: "{{ mount_point }}"
+        fstype: xfs
+        state: mounted
+
+    - name: Ensure mount persists on reboot
+      mount:
+        src: "/dev/{{ vg_name }}/{{ lv_name }}"
+        path: "{{ mount_point }}"
+        fstype: xfs
+        opts: defaults
+        state: present
+
