@@ -1,4 +1,4 @@
-device_name: "sdb"  # Replace with your actual device name
+device_name: "sdb"
 vg_name: "vg_data"
 lv_name: "lv_data"
 lv_size: "2G"
