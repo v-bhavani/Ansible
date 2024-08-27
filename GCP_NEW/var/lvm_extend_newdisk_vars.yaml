@@ -1,0 +1,5 @@
+vg_name: vg_data
+lv_name: lv_data
+new_device_name: sdc
+extend_size: 10G
+mount_point: /bcs
