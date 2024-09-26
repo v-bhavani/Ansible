@@ -1,0 +1,15 @@
+---
+- name: Extend Filesystem
+  hosts: all
+  become: yes
+
+  tasks:
+    - include_vars:
+        file: fsextendvar.yaml
+
+    - name: Extend the Logical Volume
+      command: lvextend -L {{ desired_size_gb }}G /dev/{{ vg_name }}/{{ lv_name }}
+      changed_when: false  # Mark as changed only when LV size actually changes
+
+    - name: Resize the Filesystem
+      command: xfs_growfs {{ mount_point }}
