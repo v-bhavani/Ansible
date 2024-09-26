@@ -1,0 +1,4 @@
+desired_size_gb: 5
+vg_name: vg_data
+lv_name: lv_data
+mount_point: /bcs
