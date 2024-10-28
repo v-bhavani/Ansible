@@ -15,17 +15,37 @@
       register: disk_info
       loop: "{{ lvm_configs }}"
 
+    - name: Create physical volumes
+      ansible.builtin.command:
+        cmd: "pvcreate /dev/{{ item.stdout }}"
+      loop: "{{ disk_info.results }}"
+      ignore_errors: yes
+
     - name: Create volume groups
       ansible.builtin.command:
         cmd: "vgcreate {{ item.item.vg_name }} /dev/{{ item.stdout }}"
       loop: "{{ disk_info.results }}"
       ignore_errors: yes
 
-    - name: Create logical volumes
-      ansible.builtin.command:
-        cmd: "lvcreate -l 100%FREE -n {{ item.lv_name }} {{ item.vg_name }}"
+    - name: Wait for volume groups to be available
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: Create full-size logical volume
+      ansible.builtin.lvol:
+        vg: "{{ item.vg_name }}"
+        lv: "{{ item.lv_name }}"
+        size: 100%VG
       loop: "{{ lvm_configs }}"
-      ignore_errors: yes
+      when: item.size == '100%FREE'
+
+    - name: Create specific-size logical volume
+      ansible.builtin.lvol:
+        vg: "{{ item.vg_name }}"
+        lv: "{{ item.lv_name }}"
+        size: "{{ item.size }}"
+      loop: "{{ lvm_configs }}"
+      when: item.size != '100%FREE'
 
     - name: Create directory mountpoints
       ansible.builtin.file:
@@ -47,4 +67,3 @@
         fstype: "{{ item.fs_type | default('xfs') }}"
         state: mounted
       loop: "{{ lvm_configs }}"
-
