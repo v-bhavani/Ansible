@@ -1,0 +1,65 @@
+---
+- name: Playbook for LVM Creation
+  hosts: all
+  become: true
+  vars_files:
+    - lvm_vars.yaml
+  tasks:
+    - name: Install lvm2 dependency
+      ansible.builtin.package:
+        name: lvm2
+        state: present
+
+    - name: Get disk information
+      ansible.builtin.shell: "ls -ll /dev/disk/by-id/google-{{ item.disk_id }} | awk '{print $NF}' | awk -F '/' '{print $NF}'"
+      register: disk_info
+      loop: "{{ lvm_configs }}"
+
+    - name: Create physical volumes
+      ansible.builtin.command:
+        cmd: "pvcreate /dev/{{ item.stdout }}"
+      loop: "{{ disk_info.results }}"
+      ignore_errors: yes
+
+    - name: Create mapping of VGs to disks
+      set_fact:
+        vg_disk_map: "{{ vg_disk_map | default({}) | combine({ item.item.vg_name: item.stdout }) }}"
+      loop: "{{ disk_info.results }}"
+
+    - name: Create volume groups
+      ansible.builtin.command:
+        cmd: "vgcreate {{ item.key }} /dev/{{ item.value }}"
+      loop: "{{ vg_disk_map | dict2items }}"
+      ignore_errors: yes
+
+    - name: Wait for volume groups to be available
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: Create logical volumes
+      ansible.builtin.lvol:
+        vg: "{{ item.vg_name }}"
+        lv: "{{ item.lv_name }}"
+        size: "{{ item.size | default('100%FREE') }}"
+      loop: "{{ lvm_configs }}"
+
+    - name: Create directory mountpoints
+      ansible.builtin.file:
+        path: "{{ item.mount_dir }}"
+        state: directory
+        mode: '0777'
+      loop: "{{ lvm_configs }}"
+
+    - name: Format filesystems
+      ansible.builtin.command:
+        cmd: "mkfs.{{ item.fs_type | default('xfs') }} /dev/{{ item.vg_name }}/{{ item.lv_name }}"
+      loop: "{{ lvm_configs }}"
+      ignore_errors: yes
+
+    - name: Mount filesystems
+      ansible.builtin.mount:
+        path: "{{ item.mount_dir }}"
+        src: "/dev/{{ item.vg_name }}/{{ item.lv_name }}"
+        fstype: "{{ item.fs_type | default('xfs') }}"
+        state: mounted
+      loop: "{{ lvm_configs }}"
