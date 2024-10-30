@@ -1,0 +1,24 @@
+---
+lvm_configs:
+  # Multiple LVs in one VG (vg_hana_sap)
+  - disk_id: "disk-1"
+    vg_name: "vg_hana_sap"
+    lv_name: "lv_hana_sap"
+    mount_dir: "/usr/sap"
+    size: "4G"
+    fs_type: "xfs"
+
+  - disk_id: "disk-1"  # Same disk and VG as above
+    vg_name: "vg_hana_sap"        # Same VG but different LV
+    lv_name: "lv_hana_sapDAA"
+    mount_dir: "/usr/sap/DAA"
+    size: "2G"
+    fs_type: "xfs"
+
+  # Separate VG with single LV
+  - disk_id: "disk-2"
+    vg_name: "vg_hanadata"
+    lv_name: "lv_hanadata"
+    mount_dir: "/hana/data"
+    size: "9G"
+    fs_type: "xfs"
