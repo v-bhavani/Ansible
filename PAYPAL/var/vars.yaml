@@ -5,17 +5,13 @@ nfs_directories:
   - { path: "/hana/data", clients: "10.142.15.207(rw,sync,no_root_squash) 10.142.15.208(rw,sync,no_root_squash)" }
   - { path: "/hana/log", clients: "10.142.15.207(rw,sync,no_root_squash) 10.142.15.208(rw,sync,no_root_squash)" }
   - { path: "/hana/shared", clients: "10.142.15.207(rw,sync,no_root_squash) 10.142.15.208(rw,sync,no_root_squash)" }
-  - { path: "/for", clients: "10.142.15.207(rw,sync,no_root_squash) 10.142.15.208(rw,sync,no_root_squash)" }  # New directory
-  - { path: "/cate", clients: "10.142.15.207(rw,sync,no_root_squash) 10.142.15.208(rw,sync,no_root_squash)" }  # New directory
 
-# Directories to mount on the client
 mount_directories:
   - { path: "/backup" }
   - { path: "/hana/data" }
   - { path: "/hana/log" }
   - { path: "/hana/shared" }
-  - { path: "/for" }  # New mount directory
-  - { path: "/cate" }  # New mount directory
+
 
 # NFS server IP address
 nfs_server_ip: "10.128.15.200"
