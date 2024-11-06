@@ -1,65 +1,68 @@
 ---
-- name: Playbook for LVM Creation
-  hosts: all
+- name: NFS Server Setup and Export
+  hosts: nfs_server
   become: true
   vars_files:
-    - lvm_vars.yaml
+    - vars.yaml
   tasks:
-    - name: Install lvm2 dependency
-      ansible.builtin.package:
-        name: lvm2
+    - name: Install NFS server dependencies
+      ansible.builtin.yum:
+        name:
+          - nfs-utils
+          - rpcbind
         state: present
 
-    - name: Get disk information
-      ansible.builtin.shell: "ls -ll /dev/disk/by-id/google-{{ item.disk_id }} | awk '{print $NF}' | awk -F '/' '{print $NF}'"
-      register: disk_info
-      loop: "{{ lvm_configs }}"
+    - name: Ensure NFS services are enabled and running
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - nfs-server
+        - rpcbind
 
-    - name: Create physical volumes
-      ansible.builtin.command:
-        cmd: "pvcreate /dev/{{ item.stdout }}"
-      loop: "{{ disk_info.results }}"
-      ignore_errors: yes
-
-    - name: Create mapping of VGs to disks
-      set_fact:
-        vg_disk_map: "{{ vg_disk_map | default({}) | combine({ item.item.vg_name: item.stdout }) }}"
-      loop: "{{ disk_info.results }}"
-
-    - name: Create volume groups
-      ansible.builtin.command:
-        cmd: "vgcreate {{ item.key }} /dev/{{ item.value }}"
-      loop: "{{ vg_disk_map | dict2items }}"
-      ignore_errors: yes
-
-    - name: Wait for volume groups to be available
-      ansible.builtin.pause:
-        seconds: 2
-
-    - name: Create logical volumes
-      ansible.builtin.lvol:
-        vg: "{{ item.vg_name }}"
-        lv: "{{ item.lv_name }}"
-        size: "{{ item.size | default('100%FREE') }}"
-      loop: "{{ lvm_configs }}"
-
-    - name: Create directory mountpoints
+    - name: Create export directories on NFS server
       ansible.builtin.file:
-        path: "{{ item.mount_dir }}"
+        path: "{{ item.path }}"
         state: directory
-        mode: '0777'
-      loop: "{{ lvm_configs }}"
+        mode: '0755'
+      loop: "{{ nfs_directories }}"
 
-    - name: Format filesystems
-      ansible.builtin.command:
-        cmd: "mkfs.{{ item.fs_type | default('xfs') }} /dev/{{ item.vg_name }}/{{ item.lv_name }}"
-      loop: "{{ lvm_configs }}"
-      ignore_errors: yes
+    - name: Configure NFS exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "{{ item.path }} {{ item.clients }}"
+        create: yes
+      loop: "{{ nfs_directories }}"
 
-    - name: Mount filesystems
+    - name: Export NFS shares
+      ansible.builtin.command: exportfs -ra
+      args:
+        warn: false
+
+- name: NFS Client Setup and Mount
+  hosts: nfs_clients
+  become: true
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Install NFS client dependencies
+      ansible.builtin.yum:
+        name: nfs-utils
+        state: present
+
+    - name: Ensure mount directories exist on NFS client
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ mount_directories }}"
+
+    - name: Mount NFS shares on client
       ansible.builtin.mount:
-        path: "{{ item.mount_dir }}"
-        src: "/dev/{{ item.vg_name }}/{{ item.lv_name }}"
-        fstype: "{{ item.fs_type | default('xfs') }}"
+        path: "{{ item.path }}"
+        src: "{{ nfs_server_ip }}:{{ item.path }}"
+        fstype: nfs
+        opts: rw
         state: mounted
-      loop: "{{ lvm_configs }}"
+      loop: "{{ mount_directories }}"
