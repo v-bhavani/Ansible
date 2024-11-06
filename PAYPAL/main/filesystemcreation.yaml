@@ -3,7 +3,7 @@
   hosts: all
   become: true
   vars_files:
-    - lvm_vars.yaml
+    - filesystemcreationvar.yaml
   tasks:
     - name: Install lvm2 dependency
       ansible.builtin.package:
