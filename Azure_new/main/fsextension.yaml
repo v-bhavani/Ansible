@@ -1,0 +1,24 @@
+- name: Extend Filesystems
+  hosts: all
+  become: yes
+  vars_files:
+    - fsextendvar.yaml
+  tasks:
+    - name: Extend Logical Volumes and Resize Filesystems
+      block:
+        - name: Extend Logical Volume
+          command: lvextend -r -L {{ item.desired_size_gb }}G /dev/{{ item.vg_name }}/{{ item.lv_name }}
+          loop: "{{ fs_extend_vars }}"
+          loop_control:
+            label: "Extending LV {{ item.lv_name }}"
+          register: lv_extend_result
+          changed_when: lv_extend_result.rc == 0
+
+        - name: Resize XFS Filesystem (if needed)
+          command: xfs_growfs {{ item.mount_point }}
+          loop: "{{ fs_extend_vars }}"
+          loop_control:
+            label: "Resizing filesystem at {{ item.mount_point }}"
+          register: fs_resize_result
+          changed_when: fs_resize_result.rc == 0
+          ignore_errors: yes  # In case filesystem is already at desired size

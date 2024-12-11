@@ -1,0 +1,82 @@
+- name: Install PHP and Related Packages
+  hosts: all
+  become: yes
+  vars_files:
+    - php_install_vars.yaml
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install software-properties-common
+      apt:
+        name: software-properties-common
+        state: present
+
+    - name: Add PHP PPA repository
+      apt_repository:
+        repo: "ppa:ondrej/php"
+        state: present
+        update_cache: yes
+
+    - name: Update apt cache after adding repository
+      apt:
+        update_cache: yes
+
+    - name: Install PHP Core Packages
+      apt:
+        name: "{{ php_core_packages }}"
+        state: present
+
+    - name: Install Additional PHP Extensions
+      apt:
+        name: "{{ php_additional_extensions }}"
+        state: present
+
+    - name: Install Apache Web Server (Optional)
+      apt:
+        name: 
+          - apache2
+          - "libapache2-mod-php{{ php_version }}"
+        state: present
+      when: install_apache
+
+    - name: Install Nginx Web Server (Optional)
+      apt:
+        name: 
+          - nginx
+          - "php{{ php_version }}-fpm"
+        state: present
+      when: install_nginx
+
+    - name: Install PHP-FPM
+      apt:
+        name: "php{{ php_version }}-fpm"
+        state: present
+      when: install_php_fpm
+
+    - name: Download Composer installer
+      get_url:
+        url: https://getcomposer.org/installer
+        dest: /tmp/composer-setup.php
+      when: install_composer
+
+    - name: Install Composer
+      shell: 
+        cmd: |
+          php /tmp/composer-setup.php --version={{ composer_version }} --install-dir=/usr/local/bin --filename=composer
+          rm /tmp/composer-setup.php
+      args:
+        creates: /usr/local/bin/composer
+      when: install_composer
+
+    - name: Verify PHP Installation
+      command: php --version
+      register: php_version_output
+      changed_when: false
+
+    - name: Display PHP Version
+      debug:
+        var: php_version_output.stdout_lines
