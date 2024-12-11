@@ -1,0 +1,14 @@
+fs_vars:
+  - vg_name: "vg_test1"
+    lv_name: "lv_test1"
+    lun: "0"
+    dir: "/ansibletest1"
+    ftype: "xfs"
+    size: "10g"
+
+  - vg_name: "vg_test2"
+    lv_name: "lv_test2"
+    lun: "1"
+    dir: "/ansibletest2"
+    ftype: "xfs"
+    size: "5g"

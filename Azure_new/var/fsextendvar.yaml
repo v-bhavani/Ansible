@@ -1,0 +1,10 @@
+fs_extend_vars:
+  - vg_name: "vg_test1"
+    lv_name: "lv_test1"
+    mount_point: "/ansibletest1"
+    desired_size_gb: 13
+
+  - vg_name: "vg_test2"
+    lv_name: "lv_test2"
+    mount_point: "/ansibletest2"
+    desired_size_gb: 15

@@ -1,0 +1,30 @@
+# PHP Installation Variables
+php_version: "8.1"  # Specify PHP version (7.4, 8.1, 8.2)
+
+# Core PHP packages to install
+php_core_packages:
+  - "php{{ php_version }}"
+  - "php{{ php_version }}-cli"
+  - "php{{ php_version }}-common"
+  - "php{{ php_version }}-curl"
+  - "php{{ php_version }}-mbstring"
+  - "php{{ php_version }}-xml"
+  - "php{{ php_version }}-zip"
+
+# Additional PHP extensions (customize as needed)
+php_additional_extensions:
+  - "php{{ php_version }}-mysql"
+  - "php{{ php_version }}-gd"
+  - "php{{ php_version }}-intl"
+  - "php{{ php_version }}-soap"
+
+# Web server integration (optional)
+install_apache: true
+install_nginx: false
+
+# Composer installation
+install_composer: true
+composer_version: "2.5.5"
+
+# PHP-FPM installation
+install_php_fpm: true
