@@ -1,0 +1,19 @@
+---
+- name: Sample creating file
+  hosts: all
+  become: true
+  tasks:
+    - name: Include variable file
+      include_vars:
+        file: variable.yaml
+
+    - name: Debug loaded variables
+      debug:
+        msg:
+          - "Path: {{ path }}"
+          - "Type: {{ type }}"
+
+    - name: Creating an empty file
+      ansible.builtin.file:
+        path: "{{ path }}"
+        state: "{{ type }}"
