@@ -1,5 +1,5 @@
 ---
-vg_name: "mount_vg"
+vg_name: "mount_vg_1"
 lv_name: "mount_lv"
 extend_size: "2g"
 exist_pvs: "/dev/sdc"
