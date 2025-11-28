@@ -1,0 +1,58 @@
+---
+- name: Patch Linux servers (all distros)
+  hosts: linux
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Update package cache (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Apply OS patches (Debian/Ubuntu)
+      apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Apply security patches only (Debian/Ubuntu)
+      apt:
+        upgrade: safe
+      when: ansible_os_family == "Debian" and patch_type == "security"
+
+    - name: Apply OS patches (RHEL/CentOS/Rocky/Alma/Amazon Linux)
+      yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Apply OS patches (SUSE)
+      zypper:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "Suse"
+
+    - name: Reboot if required (Linux)
+      reboot:
+        msg: "Reboot initiated by Ansible after patching"
+        connect_timeout: 5
+        reboot_timeout: 600
+      when: ansible_facts['reboot_required'] | default(false)
+
+- name: Patch Windows servers
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Install all available Windows updates
+      win_updates:
+        category_names:
+          - SecurityUpdates
+          - CriticalUpdates
+          - UpdateRollups
+          - Updates
+        reboot: yes
+
+    - name: Reboot after patching (if required)
+      win_reboot:
+        reboot_timeout: 1200
