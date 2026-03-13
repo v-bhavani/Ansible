@@ -1,0 +1,36 @@
+---
+- name: RHEL OS Patching Automation
+  hosts: linux
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    - name: Show OS information
+      debug:
+        msg: "Patching {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Clean DNF cache
+      command: dnf clean all
+
+    - name: Rebuild DNF cache
+      command: dnf makecache
+
+    - name: Enable BaseOS repo
+      command: subscription-manager repos --enable=rhel-9-baseos-rpms
+      ignore_errors: yes
+
+    - name: Enable AppStream repo
+      command: subscription-manager repos --enable=rhel-9-appstream-rpms
+      ignore_errors: yes
+
+    - name: Enable CRB repo
+      command: subscription-manager repos --enable=rhel-9-crb-rpms
+      ignore_errors: yes
+
+    - name: Update all packages
+      dnf:
+        name: "*"
+        state: latest
+        nobest: yes
+        skip_broken: yes
