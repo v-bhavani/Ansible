@@ -1,6 +1,6 @@
 ---
 - name: RHEL OS Patching Automation
-  hosts: rhel
+  hosts: linux
   become: yes
   gather_facts: yes
 
@@ -10,6 +10,11 @@
       debug:
         msg: "Patching {{ ansible_distribution }} {{ ansible_distribution_version }}"
 
+    - name: Check if subscription-manager exists
+      stat:
+        path: /usr/sbin/subscription-manager
+      register: submgr
+
     - name: Clean DNF cache
       command: dnf clean all
 
@@ -18,15 +23,15 @@
 
     - name: Enable BaseOS repo
       command: subscription-manager repos --enable=rhel-9-baseos-rpms
-      ignore_errors: yes
+      when: submgr.stat.exists
 
     - name: Enable AppStream repo
       command: subscription-manager repos --enable=rhel-9-appstream-rpms
-      ignore_errors: yes
+      when: submgr.stat.exists
 
     - name: Enable CRB repo
       command: subscription-manager repos --enable=rhel-9-crb-rpms
-      ignore_errors: yes
+      when: submgr.stat.exists
 
     - name: Update all packages
       dnf:
@@ -34,3 +39,4 @@
         state: latest
         nobest: yes
         skip_broken: yes
+ 
