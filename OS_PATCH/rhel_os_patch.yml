@@ -1,6 +1,6 @@
 ---
 - name: RHEL OS Patching Automation
-  hosts: linux
+  hosts: rhel
   become: yes
   gather_facts: yes
 
